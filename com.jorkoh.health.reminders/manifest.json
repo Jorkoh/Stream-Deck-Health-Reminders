@@ -1,0 +1,38 @@
+{
+  "Actions": [
+    {
+      "Icon": "res/action_icon",
+      "Name": "Drink Water Reminder",
+      "States": [
+        {
+          "Image": "res/action",
+          "TitleAlignment": "middle",
+          "FontSize": "12"
+        }
+      ],
+      "SupportedInMultiActions": false,
+      "Tooltip": "TODO_ENTER_TOOLTIP",
+      "UUID": "com.jorkoh.health.reminders.water",
+      "PropertyInspectorPath": "PropertyInspector/PluginActionPI.html"
+    }
+  ],
+  "Author": "Jorkoh",
+  "Name": "Health Reminders",
+  "Description": "TODO_ENTER_PLUGIN_DESCRIPTION",
+  "Icon": "res/plugin_icon",
+  "URL": "https://github.com/Jorkoh",
+  "Version": "1.0",
+  "CodePath": "com.jorkoh.health.reminders",
+  "Category": "Health Reminders",
+  "CategoryIcon": "res/category_icon",
+  "OS": [
+    {
+      "Platform": "windows",
+      "MinimumVersion": "10"
+    }
+  ],
+  "SDKVersion": 2,
+  "Software": {
+    "MinimumVersion": "4.9"
+  }
+}
