@@ -11,6 +11,7 @@
         }
       ],
       "SupportedInMultiActions": false,
+      "DisableCaching": true,
       "Tooltip": "TODO_ENTER_TOOLTIP",
       "UUID": "com.jorkoh.health.reminders.water",
       "PropertyInspectorPath": "PropertyInspector/PluginActionPI.html"

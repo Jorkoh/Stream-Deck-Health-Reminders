@@ -2,10 +2,6 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace com.jorkoh.health.reminders
@@ -37,6 +33,12 @@ namespace com.jorkoh.health.reminders
 
         private PluginSettings settings;
 
+        // Alternatively preload them
+        private string waterFull = Tools.FileToBase64("res/progress/water_full.png", true);
+        private string waterHalf = Tools.FileToBase64("res/progress/water_half.png", true);
+        private string waterEmpty = Tools.FileToBase64("res/progress/water_empty.png", true);
+        private DateTime lastDrink;
+
         #endregion
         public WaterReminder(SDConnection connection, InitialPayload payload) : base(connection, payload)
         {
@@ -49,6 +51,8 @@ namespace com.jorkoh.health.reminders
             {
                 this.settings = payload.Settings.ToObject<PluginSettings>();
             }
+
+            lastDrink = DateTime.Now;
         }
 
         public override void Dispose()
@@ -63,7 +67,28 @@ namespace com.jorkoh.health.reminders
 
         public override void KeyReleased(KeyPayload payload) { }
 
-        public override void OnTick() { }
+        public async override void OnTick()
+        {
+            switch((DateTime.Now - lastDrink).TotalSeconds)
+            {
+                case double s when (s <= 6):
+                    await Connection.SetImageAsync(waterFull);
+                    break;
+                case double s when (s > 6 && s <= 12):
+                    await Connection.SetImageAsync(waterHalf);
+                    break;
+                case double s when (s > 12 && s <= 18):
+                    await Connection.SetImageAsync(waterEmpty);
+                    break;
+                default:
+                    lastDrink = DateTime.Now;
+                    break;
+            }
+            //Logger.Instance.LogMessage(TracingLevel.INFO, "64: " + Tools.FileToBase64("res/action_with_water@2x.png", true));
+            //await Connection.SetImageAsync(Image.FromFile("res/action_with_water@2x.png"));
+            //await Connection.SetImageAsync(Properties.Plugin.Default.Water100, forceSendToStreamdeck: true);
+            //await Connection.SetImageAsync(Tools.FileToBase64("res/action_with_water@2x.png", true));
+        }
 
         public override void ReceivedSettings(ReceivedSettingsPayload payload)
         {

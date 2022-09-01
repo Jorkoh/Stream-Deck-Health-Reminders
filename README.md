@@ -6,14 +6,15 @@
 - Mark all resources as `Copy always`
 - Build
 - On projects root (outside of repo folder) place [`DistributionTool.exe`](https://developer.elgato.com/documentation/stream-deck/sdk/packaging/)
-- Create `install.bat` with this content:
+- On projects root (outside of repo folder) create a folder named `install_output`
+- On projects root (outside of repo folder) create `install.bat` with this content:
 
 ```
 setlocal
 SET OUTPUT_DIR=C:\Users\jorge\VisualStudioProjects\install_output
 SET DISTRIBUTION_TOOL="C:\Users\jorge\VisualStudioProjects\DistributionTool.exe"
 SET STREAM_DECK_FILE="C:\Program Files\Elgato\StreamDeck\StreamDeck.exe"
-SET STREAM_DECK_LOAD_TIMEOUT=7
+SET STREAM_DECK_LOAD_TIMEOUT=4
 
 taskkill /f /im streamdeck.exe
 taskkill /f /im %2.exe
@@ -27,3 +28,4 @@ timeout /t %STREAM_DECK_LOAD_TIMEOUT%
 ```
 
 - Run with `install.bat RELEASE com.jorkoh.health.reminders`
+- Plugin auto-installs and is packaged in `install_output`
