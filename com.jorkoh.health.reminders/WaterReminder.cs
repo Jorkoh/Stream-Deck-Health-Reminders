@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace com.jorkoh.health.reminders
@@ -39,6 +40,11 @@ namespace com.jorkoh.health.reminders
         private string waterEmpty = Tools.FileToBase64("res/progress/water_empty.png", true);
         private DateTime lastDrink;
 
+        // Long press stuff
+        private const int LONG_PRESS_DELAY_MS = 600; // Android default is 500
+        private bool pressed = false;
+        private CancellationTokenSource longPressCancellation;
+
         #endregion
         public WaterReminder(SDConnection connection, InitialPayload payload) : base(connection, payload)
         {
@@ -51,8 +57,6 @@ namespace com.jorkoh.health.reminders
             {
                 this.settings = payload.Settings.ToObject<PluginSettings>();
             }
-
-            lastDrink = DateTime.Now;
         }
 
         public override void Dispose()
@@ -63,13 +67,37 @@ namespace com.jorkoh.health.reminders
         public override void KeyPressed(KeyPayload payload)
         {
             Logger.Instance.LogMessage(TracingLevel.INFO, "Key Pressed");
+
+            // Cancel the previous long press task first
+            longPressCancellation?.Cancel();
+            pressed = true;
+            longPressCancellation = new CancellationTokenSource();
+            Task.Delay(LONG_PRESS_DELAY_MS, longPressCancellation.Token).ContinueWith(t =>
+            {
+                if (pressed && !t.IsCanceled)
+                {
+                    Logger.Instance.LogMessage(TracingLevel.INFO, "Long press");
+                    Connection.ShowOk();
+                }
+            }
+            );
         }
 
-        public override void KeyReleased(KeyPayload payload) { }
+        public override void KeyReleased(KeyPayload payload) {
+            Logger.Instance.LogMessage(TracingLevel.INFO, "Key Released");
+            pressed = false;
+        }
 
         public async override void OnTick()
         {
-            switch((DateTime.Now - lastDrink).TotalSeconds)
+            if (lastDrink == null)
+            {
+                // First tick init
+                lastDrink = DateTime.Now;
+                return;
+            }
+
+            switch ((DateTime.Now - lastDrink).TotalSeconds)
             {
                 case double s when (s <= 6):
                     await Connection.SetImageAsync(waterFull);
