@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -14,20 +15,53 @@ namespace com.jorkoh.health.reminders
         {
             public static PluginSettings CreateDefaultSettings()
             {
+                List<CycleLength> lengths = new List<CycleLength>()
+                {
+                    new CycleLength()
+                    {
+                        CycleLengthName = "5 minutes",
+                        CycleLengthSeconds = 5*60
+                    },
+                    new CycleLength()
+                    {
+                        CycleLengthName = "10 minutes",
+                        CycleLengthSeconds = 10*60
+                    },
+                    new CycleLength()
+                    {
+                        CycleLengthName = "15 minutes",
+                        CycleLengthSeconds = 15*60
+                    },
+                    new CycleLength()
+                    {
+                        CycleLengthName = "30 minutes",
+                        CycleLengthSeconds = 30*60
+                    },
+                    new CycleLength()
+                    {
+                        CycleLengthName = "1 hour",
+                        CycleLengthSeconds = 60*60
+                    },
+                    new CycleLength()
+                    {
+                        CycleLengthName = "2 hours",
+                        CycleLengthSeconds = 2*60*60
+                    }
+                };
+
                 PluginSettings instance = new PluginSettings
                 {
-                    OutputFileName = String.Empty,
-                    InputString = String.Empty
+                    CycleLengths = lengths,
+                    CycleLengthSeconds = lengths[0].CycleLengthSeconds
                 };
                 return instance;
             }
 
-            [FilenameProperty]
-            [JsonProperty(PropertyName = "outputFileName")]
-            public string OutputFileName { get; set; }
+            [JsonProperty(PropertyName = "cycleLengths")]
+            public List<CycleLength> CycleLengths { get; set; }
 
-            [JsonProperty(PropertyName = "inputString")]
-            public string InputString { get; set; }
+            [JsonProperty(PropertyName = "cycleLengthSeconds")]
+            public int CycleLengthSeconds { get; set; }
         }
 
         private PluginSettings settings;
@@ -55,9 +89,6 @@ namespace com.jorkoh.health.reminders
         private bool pressed = false;
         private CancellationTokenSource longPressCancellation;
 
-        // TODO: this will come from a setting
-        private const long cycleTotalSeconds = 120;
-
         // State
         private ActionMode mode = ActionMode.Graphic;
         private DateTime lastDrink = DateTime.Now;
@@ -68,7 +99,7 @@ namespace com.jorkoh.health.reminders
             if (payload.Settings == null || payload.Settings.Count == 0)
             {
                 this.settings = PluginSettings.CreateDefaultSettings();
-                SaveSettings();
+                Connection.SetSettingsAsync(JObject.FromObject(settings));
             }
             else
             {
@@ -120,7 +151,8 @@ namespace com.jorkoh.health.reminders
         public override void ReceivedSettings(ReceivedSettingsPayload payload)
         {
             Tools.AutoPopulateSettings(settings, payload.Settings);
-            SaveSettings();
+            Connection.SetSettingsAsync(JObject.FromObject(settings));
+            Logger.Instance.LogMessage(TracingLevel.INFO, $"SETTING: {settings.CycleLengthSeconds}");
         }
 
         public override void ReceivedGlobalSettings(ReceivedGlobalSettingsPayload payload) { }
@@ -173,7 +205,7 @@ namespace com.jorkoh.health.reminders
 
         private void DrawGraphic()
         {
-            switch ((DateTime.Now - lastDrink).TotalSeconds / cycleTotalSeconds)
+            switch ((DateTime.Now - lastDrink).TotalSeconds / settings.CycleLengthSeconds)
             {
                 case double percentage when (percentage < 0.1):
                     Connection.SetImageAsync(water10);
@@ -227,11 +259,6 @@ namespace com.jorkoh.health.reminders
         private async void DrawStats()
         {
             await Connection.SetImageAsync(stats);
-        }
-
-        private Task SaveSettings()
-        {
-            return Connection.SetSettingsAsync(JObject.FromObject(settings));
         }
     }
 }
