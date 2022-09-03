@@ -33,21 +33,30 @@ namespace com.jorkoh.health.reminders
         private PluginSettings settings;
 
         // Alternatively preload them
-        private string waterFull = Tools.FileToBase64("res/progress/water_full.png", true);
-        private string waterHalf = Tools.FileToBase64("res/progress/water_half.png", true);
-        private string waterEmpty = Tools.FileToBase64("res/progress/water_empty.png", true);
+        private string water10 = Tools.FileToBase64("res/progress/water_10.png", true);
+        private string water9 = Tools.FileToBase64("res/progress/water_9.png", true);
+        private string water8 = Tools.FileToBase64("res/progress/water_8.png", true);
+        private string water7 = Tools.FileToBase64("res/progress/water_7.png", true);
+        private string water6 = Tools.FileToBase64("res/progress/water_6.png", true);
+        private string water5 = Tools.FileToBase64("res/progress/water_5.png", true);
+        private string water4 = Tools.FileToBase64("res/progress/water_4.png", true);
+        private string water3 = Tools.FileToBase64("res/progress/water_3.png", true);
+        private string water2 = Tools.FileToBase64("res/progress/water_2.png", true);
+        private string water1 = Tools.FileToBase64("res/progress/water_1.png", true);
+        private string waterWarning = Tools.FileToBase64("res/progress/water_0.png", true);
+        private string waterWarningAlt = Tools.FileToBase64("res/progress/water_0_alt.png", true);
 
-        private const int WARNING_BLINK_DELAY = 400;
-        private string waterWarning = Tools.FileToBase64("res/progress/water_warning.png", true);
-        private string waterWarningAlt = Tools.FileToBase64("res/progress/water_warning_alt.png", true);
-
-        private string countdown = Tools.FileToBase64("res/progress/countdown.png", true);
-        private string stats = Tools.FileToBase64("res/progress/stats.png", true);
+        private string countdown = Tools.FileToBase64("res/progress/countdown_temp.png", true);
+        private string stats = Tools.FileToBase64("res/progress/stats_temp.png", true);
+        private bool altWarning = false; // Blinking alert
 
         // Long press stuff
         private const int LONG_PRESS_DELAY_MS = 600; // Android default is 500
         private bool pressed = false;
         private CancellationTokenSource longPressCancellation;
+
+        // TODO: this will come from a setting
+        private const long cycleTotalSeconds = 120;
 
         // State
         private ActionMode mode = ActionMode.Graphic;
@@ -89,7 +98,6 @@ namespace com.jorkoh.health.reminders
                     // Long press happened
                     pressed = false;
                     OnLongPress();
-
                 }
             }
             );
@@ -143,6 +151,8 @@ namespace com.jorkoh.health.reminders
             Logger.Instance.LogMessage(TracingLevel.INFO, "Long press");
             // Reset the time
             lastDrink = DateTime.Now;
+            altWarning = false;
+            Connection.ShowOk();
         }
 
         private void DrawMode(ActionMode mode)
@@ -163,33 +173,50 @@ namespace com.jorkoh.health.reminders
 
         private void DrawGraphic()
         {
-            switch ((DateTime.Now - lastDrink).TotalSeconds)
+            switch ((DateTime.Now - lastDrink).TotalSeconds / cycleTotalSeconds)
             {
-                case double s when (s <= 8):
-                    Connection.SetImageAsync(waterFull);
+                case double percentage when (percentage < 0.1):
+                    Connection.SetImageAsync(water10);
                     break;
-                case double s when (s > 8 && s <= 16):
-                    Connection.SetImageAsync(waterHalf);
+                case double s when (s < 0.2):
+                    Connection.SetImageAsync(water9);
                     break;
-                case double s when (s > 16 && s <= 24):
-                    Connection.SetImageAsync(waterEmpty);
+                case double s when (s < 0.3):
+                    Connection.SetImageAsync(water8);
+                    break;
+                case double s when (s < 0.4):
+                    Connection.SetImageAsync(water7);
+                    break;
+                case double s when (s < 0.5):
+                    Connection.SetImageAsync(water6);
+                    break;
+                case double s when (s < 0.6):
+                    Connection.SetImageAsync(water5);
+                    break;
+                case double s when (s < 0.7):
+                    Connection.SetImageAsync(water4);
+                    break;
+                case double s when (s < 0.8):
+                    Connection.SetImageAsync(water3);
+                    break;
+                case double s when (s < 0.9):
+                    Connection.SetImageAsync(water2);
+                    break;
+                case double s when (s < 1):
+                    Connection.SetImageAsync(water1);
                     break;
                 default:
-                    Connection.SetImageAsync(waterWarning);
-                    Task.Delay(WARNING_BLINK_DELAY).ContinueWith(t =>
+                    if (!altWarning)
                     {
-                        if ((DateTime.Now - lastDrink).TotalSeconds > 24) // TODO: abstract this conditions
-                        {
-                            Connection.SetImageAsync(waterWarningAlt);
-                        }
+                        Connection.SetImageAsync(waterWarning);
                     }
-            );
+                    else
+                    {
+                        Connection.SetImageAsync(waterWarningAlt);
+                    }
+                    altWarning = !altWarning;
                     break;
             }
-            //Logger.Instance.LogMessage(TracingLevel.INFO, "64: " + Tools.FileToBase64("res/action_with_water@2x.png", true));
-            //await Connection.SetImageAsync(Image.FromFile("res/action_with_water@2x.png"));
-            //await Connection.SetImageAsync(Properties.Plugin.Default.Water100, forceSendToStreamdeck: true);
-            //await Connection.SetImageAsync(Tools.FileToBase64("res/action_with_water@2x.png", true));
         }
 
         private async void DrawCountdown()
