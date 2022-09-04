@@ -1,8 +1,11 @@
 ﻿using BarRaider.SdTools;
+using BarRaider.SdTools.Events;
+using BarRaider.SdTools.Wrappers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -65,6 +68,7 @@ namespace com.jorkoh.health.reminders
         }
 
         private PluginSettings settings;
+        private TitleParameters titleParameters = null;
 
         // Alternatively preload them
         private string water10 = Tools.FileToBase64("res/progress/water_10.png", true);
@@ -79,6 +83,17 @@ namespace com.jorkoh.health.reminders
         private string water1 = Tools.FileToBase64("res/progress/water_1.png", true);
         private string waterWarning = Tools.FileToBase64("res/progress/water_0.png", true);
         private string waterWarningAlt = Tools.FileToBase64("res/progress/water_0_alt.png", true);
+
+        private string empty10 = Tools.FileToBase64("res/progress/empty_10.png", true);
+        private string empty9 = Tools.FileToBase64("res/progress/empty_9.png", true);
+        private string empty8 = Tools.FileToBase64("res/progress/empty_8.png", true);
+        private string empty7 = Tools.FileToBase64("res/progress/empty_7.png", true);
+        private string empty6 = Tools.FileToBase64("res/progress/empty_6.png", true);
+        private string empty5 = Tools.FileToBase64("res/progress/empty_5.png", true);
+        private string empty4 = Tools.FileToBase64("res/progress/empty_4.png", true);
+        private string empty3 = Tools.FileToBase64("res/progress/empty_3.png", true);
+        private string empty2 = Tools.FileToBase64("res/progress/empty_2.png", true);
+        private string empty1 = Tools.FileToBase64("res/progress/empty_1.png", true);
 
         private string countdown = Tools.FileToBase64("res/progress/countdown_temp.png", true);
         private string stats = Tools.FileToBase64("res/progress/stats_temp.png", true);
@@ -105,6 +120,7 @@ namespace com.jorkoh.health.reminders
             {
                 this.settings = payload.Settings.ToObject<PluginSettings>();
             }
+            Connection.OnTitleParametersDidChange += Connection_OnTitleParametersDidChange;
         }
 
         #region Overrides
@@ -112,6 +128,11 @@ namespace com.jorkoh.health.reminders
         public override void Dispose()
         {
             Logger.Instance.LogMessage(TracingLevel.INFO, $"Destructor called");
+        }
+
+        private void Connection_OnTitleParametersDidChange(object sender, SDEventReceivedEventArgs<TitleParametersDidChange> e)
+        {
+            titleParameters = e.Event?.Payload?.TitleParameters;
         }
 
         public override void KeyPressed(KeyPayload payload)
@@ -253,7 +274,31 @@ namespace com.jorkoh.health.reminders
 
         private async void DrawCountdown()
         {
-            await Connection.SetImageAsync(countdown);
+            //using (Bitmap img = Tools.GenerateGenericKeyImage(out Graphics graphics))
+            //{
+            //    string split = Tools.SplitStringToFit("1hrs, 22min left", titleParameters);
+            //    graphics.AddTextPath(titleParameters, img.Height, img.Width, split);
+            //    await Connection.SetImageAsync(img);
+            //    graphics.Dispose();
+            //}
+
+
+            var image = Tools.Base64StringToImage(empty4); // 144px
+            using (Graphics graphics = Graphics.FromImage(image))
+            {
+                // TODO don't redo the params every draw, only when they change
+                TitleParameters adaptedParams = new TitleParameters(
+                    titleParameters.FontFamily,
+                    titleParameters.FontStyle,
+                    titleParameters.FontSizeInPoints,
+                    titleParameters.TitleColor,
+                    true,
+                    TitleVerticalAlignment.Top
+                );
+                string splitTitle = Tools.SplitStringToFit($"Drink in 1hrs, 22min", adaptedParams); // TODO don't show hours if not needed, different text when it's needed now!
+                graphics.AddTextPath(adaptedParams, image.Height, image.Width, splitTitle);
+                await Connection.SetImageAsync(image);
+            }
         }
 
         private async void DrawStats()
