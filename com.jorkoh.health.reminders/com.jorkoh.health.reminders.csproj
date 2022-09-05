@@ -124,6 +124,12 @@
     <Content Include="res\progress\countdown_temp.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="res\progress\empty_0.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="res\progress\empty_0_alt.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="res\progress\empty_1.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

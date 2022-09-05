@@ -22,6 +22,11 @@ namespace com.jorkoh.health.reminders
                 {
                     new CycleLength()
                     {
+                        CycleLengthName = "30 seconds", // TODO remove before release
+                        CycleLengthSeconds = 30
+                    },
+                    new CycleLength()
+                    {
                         CycleLengthName = "5 minutes",
                         CycleLengthSeconds = 5*60
                     },
@@ -71,29 +76,31 @@ namespace com.jorkoh.health.reminders
         private TitleParameters titleParameters = null;
 
         // Alternatively preload them
-        private string water10 = Tools.FileToBase64("res/progress/water_10.png", true);
-        private string water9 = Tools.FileToBase64("res/progress/water_9.png", true);
-        private string water8 = Tools.FileToBase64("res/progress/water_8.png", true);
-        private string water7 = Tools.FileToBase64("res/progress/water_7.png", true);
-        private string water6 = Tools.FileToBase64("res/progress/water_6.png", true);
-        private string water5 = Tools.FileToBase64("res/progress/water_5.png", true);
-        private string water4 = Tools.FileToBase64("res/progress/water_4.png", true);
-        private string water3 = Tools.FileToBase64("res/progress/water_3.png", true);
-        private string water2 = Tools.FileToBase64("res/progress/water_2.png", true);
-        private string water1 = Tools.FileToBase64("res/progress/water_1.png", true);
-        private string waterWarning = Tools.FileToBase64("res/progress/water_0.png", true);
-        private string waterWarningAlt = Tools.FileToBase64("res/progress/water_0_alt.png", true);
+        private readonly string water10 = Tools.FileToBase64("res/progress/water_10.png", true);
+        private readonly string water9 = Tools.FileToBase64("res/progress/water_9.png", true);
+        private readonly string water8 = Tools.FileToBase64("res/progress/water_8.png", true);
+        private readonly string water7 = Tools.FileToBase64("res/progress/water_7.png", true);
+        private readonly string water6 = Tools.FileToBase64("res/progress/water_6.png", true);
+        private readonly string water5 = Tools.FileToBase64("res/progress/water_5.png", true);
+        private readonly string water4 = Tools.FileToBase64("res/progress/water_4.png", true);
+        private readonly string water3 = Tools.FileToBase64("res/progress/water_3.png", true);
+        private readonly string water2 = Tools.FileToBase64("res/progress/water_2.png", true);
+        private readonly string water1 = Tools.FileToBase64("res/progress/water_1.png", true);
+        private readonly string waterWarning = Tools.FileToBase64("res/progress/water_0.png", true);
+        private readonly string waterWarningAlt = Tools.FileToBase64("res/progress/water_0_alt.png", true);
 
-        private string empty10 = Tools.FileToBase64("res/progress/empty_10.png", true);
-        private string empty9 = Tools.FileToBase64("res/progress/empty_9.png", true);
-        private string empty8 = Tools.FileToBase64("res/progress/empty_8.png", true);
-        private string empty7 = Tools.FileToBase64("res/progress/empty_7.png", true);
-        private string empty6 = Tools.FileToBase64("res/progress/empty_6.png", true);
-        private string empty5 = Tools.FileToBase64("res/progress/empty_5.png", true);
-        private string empty4 = Tools.FileToBase64("res/progress/empty_4.png", true);
-        private string empty3 = Tools.FileToBase64("res/progress/empty_3.png", true);
-        private string empty2 = Tools.FileToBase64("res/progress/empty_2.png", true);
-        private string empty1 = Tools.FileToBase64("res/progress/empty_1.png", true);
+        private readonly string empty10_path = "res/progress/empty_10.png";
+        private readonly string empty9_path = "res/progress/empty_9.png";
+        private readonly string empty8_path = "res/progress/empty_8.png";
+        private readonly string empty7_path = "res/progress/empty_7.png";
+        private readonly string empty6_path = "res/progress/empty_6.png";
+        private readonly string empty5_path = "res/progress/empty_5.png";
+        private readonly string empty4_path = "res/progress/empty_4.png";
+        private readonly string empty3_path = "res/progress/empty_3.png";
+        private readonly string empty2_path = "res/progress/empty_2.png";
+        private readonly string empty1_path = "res/progress/empty_1.png";
+        private readonly string emptyWarning_path = "res/progress/empty_0.png";
+        private readonly string emptyWarningAlt_path = "res/progress/empty_0_alt.png";
 
         private string countdown = Tools.FileToBase64("res/progress/countdown_temp.png", true);
         private string stats = Tools.FileToBase64("res/progress/stats_temp.png", true);
@@ -274,16 +281,7 @@ namespace com.jorkoh.health.reminders
 
         private async void DrawCountdown()
         {
-            //using (Bitmap img = Tools.GenerateGenericKeyImage(out Graphics graphics))
-            //{
-            //    string split = Tools.SplitStringToFit("1hrs, 22min left", titleParameters);
-            //    graphics.AddTextPath(titleParameters, img.Height, img.Width, split);
-            //    await Connection.SetImageAsync(img);
-            //    graphics.Dispose();
-            //}
-
-
-            var image = Tools.Base64StringToImage(empty4); // 144px
+            Image image = GetEmptyImage();
             using (Graphics graphics = Graphics.FromImage(image))
             {
                 // TODO don't redo the params every draw, only when they change
@@ -303,7 +301,61 @@ namespace com.jorkoh.health.reminders
 
         private async void DrawStats()
         {
-            await Connection.SetImageAsync(stats);
+            Image image = GetEmptyImage();
+            using (Graphics graphics = Graphics.FromImage(image))
+            {
+                // TODO don't redo the params every draw, only when they change
+                TitleParameters adaptedParams = new TitleParameters(
+                    titleParameters.FontFamily,
+                    titleParameters.FontStyle,
+                    titleParameters.FontSizeInPoints,
+                    titleParameters.TitleColor,
+                    true,
+                    TitleVerticalAlignment.Top
+                );
+                string splitTitle = Tools.SplitStringToFit($"Session:\n14\nTotal:\n1231", adaptedParams);
+                graphics.AddTextPath(adaptedParams, image.Height, image.Width, splitTitle);
+                await Connection.SetImageAsync(image);
+            }
+        }
+
+        private Image GetEmptyImage()
+        {
+            switch ((DateTime.Now - lastDrink).TotalSeconds / settings.CycleLengthSeconds)
+            {
+                case double percentage when (percentage < 0.1):
+                    return Image.FromFile(empty10_path, true);
+                case double s when (s < 0.2):
+                    return Image.FromFile(empty9_path, true);
+                case double s when (s < 0.3):
+                    return Image.FromFile(empty8_path, true);
+                case double s when (s < 0.4):
+                    return Image.FromFile(empty7_path, true);
+                case double s when (s < 0.5):
+                    return Image.FromFile(empty6_path, true);
+                case double s when (s < 0.6):
+                    return Image.FromFile(empty5_path, true);
+                case double s when (s < 0.7):
+                    return Image.FromFile(empty4_path, true);
+                case double s when (s < 0.8):
+                    return Image.FromFile(empty3_path, true);
+                case double s when (s < 0.9):
+                    return Image.FromFile(empty2_path, true);
+                case double s when (s < 1):
+                    return Image.FromFile(empty1_path, true);
+                default:
+                    Image image;
+                    if (!altWarning)
+                    {
+                        image = Image.FromFile(emptyWarning_path, true);
+                    }
+                    else
+                    {
+                        image = Image.FromFile(emptyWarningAlt_path, true);
+                    }
+                    altWarning = !altWarning;
+                    return image;
+            }
         }
     }
 }
