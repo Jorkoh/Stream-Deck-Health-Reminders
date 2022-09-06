@@ -52,8 +52,13 @@ namespace com.jorkoh.health.reminders
                     },
                     new CycleLength()
                     {
+                        CycleLengthName = "1 hour, 30 minutes",
+                        CycleLengthSeconds = 90*60
+                    },
+                    new CycleLength()
+                    {
                         CycleLengthName = "2 hours",
-                        CycleLengthSeconds = 2*60*60
+                        CycleLengthSeconds = 120*60
                     }
                 };
 
@@ -284,6 +289,56 @@ namespace com.jorkoh.health.reminders
             Image image = GetEmptyImage();
             using (Graphics graphics = Graphics.FromImage(image))
             {
+                var title = "";
+                var diff = (DateTime.Now - lastDrink);
+                if (diff.TotalSeconds > settings.CycleLengthSeconds)
+                {
+                    title += "Time to drink!";
+                }
+                else
+                {
+                    title += "Drink in ";
+                    var remaining = TimeSpan.FromSeconds(settings.CycleLengthSeconds) - diff;
+                    if (remaining.TotalMinutes < 1)
+                    {
+                        title += "< 1min";
+                    }
+                    else
+                    {
+                        if (remaining.Hours > 1)
+                        {
+                            title += $"{remaining.Hours}hrs";
+                        }
+                        else if (remaining.Hours == 1)
+                        {
+                            title += "1hr";
+                        }
+
+                        if (remaining.Minutes > 1)
+                        {
+                            if (remaining.Hours > 0)
+                            {
+                                title += $", {remaining.Minutes}mins";
+                            }
+                            else
+                            {
+                                title += $"{remaining.Minutes}mins";
+                            }
+                        }
+                        else if (remaining.Minutes == 1)
+                        {
+                            if (remaining.Hours > 0)
+                            {
+                                title += $", {remaining.Minutes}min";
+                            }
+                            else
+                            {
+                                title += $"{remaining.Minutes}min";
+                            }
+                        }
+
+                    }
+                }
                 // TODO don't redo the params every draw, only when they change
                 TitleParameters adaptedParams = new TitleParameters(
                     titleParameters.FontFamily,
@@ -293,7 +348,7 @@ namespace com.jorkoh.health.reminders
                     true,
                     TitleVerticalAlignment.Top
                 );
-                string splitTitle = Tools.SplitStringToFit($"Drink in 1hrs, 22min", adaptedParams); // TODO don't show hours if not needed, different text when it's needed now!
+                string splitTitle = Tools.SplitStringToFit(title, adaptedParams);
                 graphics.AddTextPath(adaptedParams, image.Height, image.Width, splitTitle);
                 await Connection.SetImageAsync(image);
             }
