@@ -13,12 +13,19 @@
 <body>
     <div class="sdpi-wrapper">
         <details class="message info">
-            <summary>Press to cycle between display modes. Hold to reset the timer</summary>
+            <summary><strong>Press to change the display mode. Hold to reset the timer</strong></summary>
         </details>
         <div class="sdpi-item" id="dvTitlePrefix">
-            <div class="sdpi-item-label">Cycle length</div>
+            <div class="sdpi-item-label">Reminder type</div>
+            <select class="sdpi-item-value select sdProperty sdList" id="reminderTypeItems" oninput="setSettings()" sdListTextProperty="reminderTypeItemName" sdListValueProperty="reminderTypeItemId" sdValueField="reminderType"></select>
+        </div>
+        <div class="sdpi-item" id="dvTitlePrefix">
+            <div class="sdpi-item-label">Wait length</div>
             <select class="sdpi-item-value select sdProperty sdList" id="cycleLengths" oninput="setSettings()" sdListTextProperty="lengthName" sdListValueProperty="lengthSeconds" sdValueField="cycleLengthSeconds"></select>
         </div>
+        <details class="message">
+            <summary>Keep the title empty and the default icon for best results</summary>
+        </details>
     </div>
 </body>
 </html>

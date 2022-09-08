@@ -11,8 +11,8 @@ using System.Threading.Tasks;
 
 namespace com.jorkoh.health.reminders
 {
-    [PluginActionId("com.jorkoh.health.reminders.water")]
-    public class WaterReminder : PluginBase
+    [PluginActionId("com.jorkoh.health.reminders.reminder")]
+    public class Reminder : PluginBase
     {
         private class PluginSettings
         {
@@ -61,14 +61,40 @@ namespace com.jorkoh.health.reminders
                         CycleLengthSeconds = 120*60
                     }
                 };
+                List<ReminderTypeItem> types = new List<ReminderTypeItem>()
+                {
+                    new ReminderTypeItem()
+                    {
+                        ReminderTypeItemId = 0,
+                        ReminderTypeItemName = "Stay hydrated, drink water!"
+                    },
+                    new ReminderTypeItem()
+                    {
+                        ReminderTypeItemId = 1,
+                        ReminderTypeItemName = "Relax your vision!"
+                    },
+                    new ReminderTypeItem()
+                    {
+                        ReminderTypeItemId = 2,
+                        ReminderTypeItemName = "Get up and stretch!"
+                    }
+                };
 
                 PluginSettings instance = new PluginSettings
                 {
+                    ReminderTypeItems = types,
+                    ReminderType = 0,
                     CycleLengths = lengths,
                     CycleLengthSeconds = lengths[0].CycleLengthSeconds
                 };
                 return instance;
             }
+
+            [JsonProperty(PropertyName = "reminderTypeItems")]
+            public List<ReminderTypeItem> ReminderTypeItems { get; set; }
+
+            [JsonProperty(PropertyName = "reminderType")]
+            public ReminderType ReminderType { get; set; }
 
             [JsonProperty(PropertyName = "cycleLengths")]
             public List<CycleLength> CycleLengths { get; set; }
@@ -93,6 +119,32 @@ namespace com.jorkoh.health.reminders
         private readonly string water1 = Tools.FileToBase64("res/progress/water_1.png", true);
         private readonly string waterWarning = Tools.FileToBase64("res/progress/water_0.png", true);
         private readonly string waterWarningAlt = Tools.FileToBase64("res/progress/water_0_alt.png", true);
+
+        private readonly string vision10 = Tools.FileToBase64("res/progress/vision_10.png", true);
+        private readonly string vision9 = Tools.FileToBase64("res/progress/vision_9.png", true);
+        private readonly string vision8 = Tools.FileToBase64("res/progress/vision_8.png", true);
+        private readonly string vision7 = Tools.FileToBase64("res/progress/vision_7.png", true);
+        private readonly string vision6 = Tools.FileToBase64("res/progress/vision_6.png", true);
+        private readonly string vision5 = Tools.FileToBase64("res/progress/vision_5.png", true);
+        private readonly string vision4 = Tools.FileToBase64("res/progress/vision_4.png", true);
+        private readonly string vision3 = Tools.FileToBase64("res/progress/vision_3.png", true);
+        private readonly string vision2 = Tools.FileToBase64("res/progress/vision_2.png", true);
+        private readonly string vision1 = Tools.FileToBase64("res/progress/vision_1.png", true);
+        private readonly string visionWarning = Tools.FileToBase64("res/progress/vision_0.png", true);
+        private readonly string visionWarningAlt = Tools.FileToBase64("res/progress/vision_0_alt.png", true);
+
+        private readonly string stretch10 = Tools.FileToBase64("res/progress/stretch_10.png", true);
+        private readonly string stretch9 = Tools.FileToBase64("res/progress/stretch_9.png", true);
+        private readonly string stretch8 = Tools.FileToBase64("res/progress/stretch_8.png", true);
+        private readonly string stretch7 = Tools.FileToBase64("res/progress/stretch_7.png", true);
+        private readonly string stretch6 = Tools.FileToBase64("res/progress/stretch_6.png", true);
+        private readonly string stretch5 = Tools.FileToBase64("res/progress/stretch_5.png", true);
+        private readonly string stretch4 = Tools.FileToBase64("res/progress/stretch_4.png", true);
+        private readonly string stretch3 = Tools.FileToBase64("res/progress/stretch_3.png", true);
+        private readonly string stretch2 = Tools.FileToBase64("res/progress/stretch_2.png", true);
+        private readonly string stretch1 = Tools.FileToBase64("res/progress/stretch_1.png", true);
+        private readonly string stretchWarning = Tools.FileToBase64("res/progress/stretch_0.png", true);
+        private readonly string stretchWarningAlt = Tools.FileToBase64("res/progress/stretch_0_alt.png", true);
 
         private readonly string empty10_path = "res/progress/empty_10.png";
         private readonly string empty9_path = "res/progress/empty_9.png";
@@ -120,7 +172,7 @@ namespace com.jorkoh.health.reminders
         private ActionMode mode = ActionMode.Graphic;
         private DateTime lastDrink = DateTime.Now;
 
-        public WaterReminder(SDConnection connection, InitialPayload payload) : base(connection, payload)
+        public Reminder(SDConnection connection, InitialPayload payload) : base(connection, payload)
         {
             Logger.Instance.LogMessage(TracingLevel.INFO, $"Constructor called");
             if (payload.Settings == null || payload.Settings.Count == 0)
@@ -241,43 +293,175 @@ namespace com.jorkoh.health.reminders
             switch ((DateTime.Now - lastDrink).TotalSeconds / settings.CycleLengthSeconds)
             {
                 case double percentage when (percentage < 0.1):
-                    Connection.SetImageAsync(water10);
+                    switch (settings.ReminderType)
+                    {
+                        case ReminderType.Water:
+                            Connection.SetImageAsync(water10);
+                            break;
+                        case ReminderType.Vision:
+                            Connection.SetImageAsync(vision10);
+                            break;
+                        case ReminderType.Stretch:
+                            Connection.SetImageAsync(stretch10);
+                            break;
+                    }
                     break;
                 case double s when (s < 0.2):
-                    Connection.SetImageAsync(water9);
+                    switch (settings.ReminderType)
+                    {
+                        case ReminderType.Water:
+                            Connection.SetImageAsync(water9);
+                            break;
+                        case ReminderType.Vision:
+                            Connection.SetImageAsync(vision9);
+                            break;
+                        case ReminderType.Stretch:
+                            Connection.SetImageAsync(stretch9);
+                            break;
+                    }
                     break;
                 case double s when (s < 0.3):
-                    Connection.SetImageAsync(water8);
+                    switch (settings.ReminderType)
+                    {
+                        case ReminderType.Water:
+                            Connection.SetImageAsync(water8);
+                            break;
+                        case ReminderType.Vision:
+                            Connection.SetImageAsync(vision8);
+                            break;
+                        case ReminderType.Stretch:
+                            Connection.SetImageAsync(stretch8);
+                            break;
+                    }
                     break;
                 case double s when (s < 0.4):
-                    Connection.SetImageAsync(water7);
+                    switch (settings.ReminderType)
+                    {
+                        case ReminderType.Water:
+                            Connection.SetImageAsync(water7);
+                            break;
+                        case ReminderType.Vision:
+                            Connection.SetImageAsync(vision7);
+                            break;
+                        case ReminderType.Stretch:
+                            Connection.SetImageAsync(stretch7);
+                            break;
+                    }
                     break;
                 case double s when (s < 0.5):
-                    Connection.SetImageAsync(water6);
+                    switch (settings.ReminderType)
+                    {
+                        case ReminderType.Water:
+                            Connection.SetImageAsync(water6);
+                            break;
+                        case ReminderType.Vision:
+                            Connection.SetImageAsync(vision6);
+                            break;
+                        case ReminderType.Stretch:
+                            Connection.SetImageAsync(stretch6);
+                            break;
+                    }
                     break;
                 case double s when (s < 0.6):
-                    Connection.SetImageAsync(water5);
+                    switch (settings.ReminderType)
+                    {
+                        case ReminderType.Water:
+                            Connection.SetImageAsync(water5);
+                            break;
+                        case ReminderType.Vision:
+                            Connection.SetImageAsync(vision5);
+                            break;
+                        case ReminderType.Stretch:
+                            Connection.SetImageAsync(stretch5);
+                            break;
+                    }
                     break;
                 case double s when (s < 0.7):
-                    Connection.SetImageAsync(water4);
+                    switch (settings.ReminderType)
+                    {
+                        case ReminderType.Water:
+                            Connection.SetImageAsync(water4);
+                            break;
+                        case ReminderType.Vision:
+                            Connection.SetImageAsync(vision4);
+                            break;
+                        case ReminderType.Stretch:
+                            Connection.SetImageAsync(stretch4);
+                            break;
+                    }
                     break;
                 case double s when (s < 0.8):
-                    Connection.SetImageAsync(water3);
+                    switch (settings.ReminderType)
+                    {
+                        case ReminderType.Water:
+                            Connection.SetImageAsync(water3);
+                            break;
+                        case ReminderType.Vision:
+                            Connection.SetImageAsync(vision3);
+                            break;
+                        case ReminderType.Stretch:
+                            Connection.SetImageAsync(stretch3);
+                            break;
+                    }
                     break;
                 case double s when (s < 0.9):
-                    Connection.SetImageAsync(water2);
+                    switch (settings.ReminderType)
+                    {
+                        case ReminderType.Water:
+                            Connection.SetImageAsync(water2);
+                            break;
+                        case ReminderType.Vision:
+                            Connection.SetImageAsync(vision2);
+                            break;
+                        case ReminderType.Stretch:
+                            Connection.SetImageAsync(stretch2);
+                            break;
+                    }
                     break;
                 case double s when (s < 1):
-                    Connection.SetImageAsync(water1);
+                    switch (settings.ReminderType)
+                    {
+                        case ReminderType.Water:
+                            Connection.SetImageAsync(water1);
+                            break;
+                        case ReminderType.Vision:
+                            Connection.SetImageAsync(vision1);
+                            break;
+                        case ReminderType.Stretch:
+                            Connection.SetImageAsync(stretch1);
+                            break;
+                    }
                     break;
                 default:
                     if (!altWarning)
                     {
-                        Connection.SetImageAsync(waterWarning);
+                        switch (settings.ReminderType)
+                        {
+                            case ReminderType.Water:
+                                Connection.SetImageAsync(waterWarning);
+                                break;
+                            case ReminderType.Vision:
+                                Connection.SetImageAsync(visionWarning);
+                                break;
+                            case ReminderType.Stretch:
+                                Connection.SetImageAsync(stretchWarning);
+                                break;
+                        }
                     }
                     else
                     {
-                        Connection.SetImageAsync(waterWarningAlt);
+                        switch (settings.ReminderType)
+                        {
+                            case ReminderType.Water:
+                                Connection.SetImageAsync(waterWarningAlt);
+                                break;
+                            case ReminderType.Vision:
+                                Connection.SetImageAsync(visionWarningAlt);
+                                break;
+                            case ReminderType.Stretch:
+                                Connection.SetImageAsync(stretchWarningAlt);
+                                break;
+                        }
                     }
                     altWarning = !altWarning;
                     break;
@@ -293,11 +477,33 @@ namespace com.jorkoh.health.reminders
                 var diff = (DateTime.Now - lastDrink);
                 if (diff.TotalSeconds > settings.CycleLengthSeconds)
                 {
-                    title += "Time to drink!";
+                    switch (settings.ReminderType)
+                    {
+                        case ReminderType.Water:
+                            title += "Time to drink!";
+                            break;
+                        case ReminderType.Vision:
+                            title += "Look far away!";
+                            break;
+                        case ReminderType.Stretch:
+                            title += "Get up and stretch!";
+                            break;
+                    }
                 }
                 else
                 {
-                    title += "Drink in ";
+                    switch (settings.ReminderType)
+                    {
+                        case ReminderType.Water:
+                            title += "Drink in ";
+                            break;
+                        case ReminderType.Vision:
+                            title += "Look away in ";
+                            break;
+                        case ReminderType.Stretch:
+                            title += "Stretch in ";
+                            break;
+                    }
                     var remaining = TimeSpan.FromSeconds(settings.CycleLengthSeconds) - diff;
                     if (remaining.TotalMinutes < 1)
                     {
