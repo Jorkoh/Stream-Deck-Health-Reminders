@@ -2,7 +2,7 @@
   "Actions": [
     {
       "Icon": "res/action_icon",
-      "Name": "Drink Water Reminder",
+      "Name": "Health Reminder",
       "States": [
         {
           "Image": "res/action",
