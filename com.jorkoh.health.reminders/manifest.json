@@ -12,14 +12,14 @@
       ],
       "SupportedInMultiActions": false,
       "DisableCaching": true,
-      "Tooltip": "TODO_ENTER_TOOLTIP",
+      "Tooltip": "Protect your health setting up reminders for healthy habits!",
       "UUID": "com.jorkoh.health.reminders.reminder",
       "PropertyInspectorPath": "PropertyInspector/PluginActionPI.html"
     }
   ],
   "Author": "Jorkoh",
   "Name": "Health Reminders",
-  "Description": "TODO_ENTER_PLUGIN_DESCRIPTION",
+  "Description": "Protect your health with Health Reminders. Don't forget to drink water, stretch or relax your vision again with this plugin.'",
   "Icon": "res/plugin_icon",
   "URL": "https://github.com/Jorkoh",
   "Version": "1.0",

@@ -164,7 +164,7 @@ namespace com.jorkoh.health.reminders
         private bool altWarning = false; // Blinking alert
 
         // Long press stuff
-        private const int LONG_PRESS_DELAY_MS = 600; // Android default is 500
+        private const int LONG_PRESS_DELAY_MS = 650; // Android default is 500
         private bool pressed = false;
         private CancellationTokenSource longPressCancellation;
 
