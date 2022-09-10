@@ -12,8 +12,10 @@
 </head>
 <body>
     <div class="sdpi-wrapper">
-        <details class="message info">
-            <summary><strong>Press to change the display mode. Hold to reset the timer</strong></summary>
+        <details>
+            <summary><strong>HOW TO USE (click to expand)</strong></summary>
+            <p>1. Configure the reminder type and length<br>2. <strong>Press</strong> to change the display mode<br>3. <strong>Hold</strong> to reset the timer<br>4. Keep the title empty and the default icon for best results</p>
+            <a class="info" href="https://www.youtube.com/watch?v=AKpfavk1Kbw" target="_blank">Video tutorial</a>
         </details>
         <div class="sdpi-item" id="dvTitlePrefix">
             <div class="sdpi-item-label">Reminder type</div>
@@ -23,9 +25,38 @@
             <div class="sdpi-item-label">Wait length</div>
             <select class="sdpi-item-value select sdProperty sdList" id="cycleLengths" oninput="setSettings()" sdListTextProperty="lengthName" sdListValueProperty="lengthSeconds" sdValueField="cycleLengthSeconds"></select>
         </div>
-        <details class="message">
-            <summary>Keep the title empty and the default icon for best results</summary>
-        </details>
+        <div class="sdpi-heading">STATS</div>
+        <div class="sdpi-item" id="tableid">
+            <table class="sdpi-item-value no-select" width="100%">
+                <tr>
+                    <td> </td>
+                    <td>Water</td>
+                    <td>Vision</td>
+                    <td>Stretch</td>
+                </tr>
+                <tr>
+                    <td>Today</td>
+                    <td><span class="sdHTML sdProperty sdpi-item-value" id="waterTodayValue"></span></td>
+                    <td><span class="sdHTML sdProperty sdpi-item-value" id="visionTodayValue"></span></td>
+                    <td><span class="sdHTML sdProperty sdpi-item-value" id="stretchTodayValue"></span></td>
+                </tr>
+                <tr>
+                    <td>Month</td>
+                    <td><span class="sdHTML sdProperty sdpi-item-value" id="waterMonthValue"></span></td>
+                    <td><span class="sdHTML sdProperty sdpi-item-value" id="visionMonthValue"></span></td>
+                    <td><span class="sdHTML sdProperty sdpi-item-value" id="stretchMonthValue"></span></td>
+                </tr>
+                <tr>
+                    <td>Total</td>
+                    <td><span class="sdHTML sdProperty sdpi-item-value" id="waterTotalValue"></span></td>
+                    <td><span class="sdHTML sdProperty sdpi-item-value" id="visionTotalValue"></span></td>
+                    <td><span class="sdHTML sdProperty sdpi-item-value" id="stretchTotalValue"></span></td>
+                </tr>
+            </table>
+        </div>
+        <div style="text-align: center;">
+            <button class="sdpi-item-value max20" onclick="resetStats()">RESET STATS</button>
+        </div>
     </div>
 </body>
 </html>

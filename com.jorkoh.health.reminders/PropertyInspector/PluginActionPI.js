@@ -1,5 +1,5 @@
-﻿function resetCounter() {
+﻿function resetStats() {
     var payload = {};
-    payload.property_inspector = 'resetCounter';
+    payload.property_inspector = 'resetStats';
     sendPayloadToPlugin(payload);
 }

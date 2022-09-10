@@ -6,6 +6,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -14,8 +15,73 @@ namespace com.jorkoh.health.reminders
     [PluginActionId("com.jorkoh.health.reminders.reminder")]
     public class Reminder : PluginBase
     {
+        private class StatsSettings
+        {
+            [JsonProperty(PropertyName = "waterUses")]
+            public List<DateTime> WaterUses { get; set; }
+
+            [JsonProperty(PropertyName = "stretchUses")]
+            public List<DateTime> StretchUses { get; set; }
+
+            [JsonProperty(PropertyName = "visionUses")]
+            public List<DateTime> VisionUses { get; set; }
+
+            public static StatsSettings CreateDefaultSettings()
+            {
+                return new StatsSettings()
+                {
+                    WaterUses = new List<DateTime>(),
+                    StretchUses = new List<DateTime>(),
+                    VisionUses = new List<DateTime>(),
+                };
+            }
+        }
+
         private class PluginSettings
         {
+            #region StatsBindings
+
+            [JsonProperty(PropertyName = "waterTodayValue")]
+            public string WaterTodayValue { get; set; }
+
+            [JsonProperty(PropertyName = "visionTodayValue")]
+            public string VisionTodayValue { get; set; }
+
+            [JsonProperty(PropertyName = "stretchTodayValue")]
+            public string StretchTodayValue { get; set; }
+
+            [JsonProperty(PropertyName = "waterMonthValue")]
+            public string WaterMonthValue { get; set; }
+
+            [JsonProperty(PropertyName = "visionMonthValue")]
+            public string VisionMonthValue { get; set; }
+
+            [JsonProperty(PropertyName = "stretchMonthValue")]
+            public string StretchMonthValue { get; set; }
+
+            [JsonProperty(PropertyName = "waterTotalValue")]
+            public string WaterTotalValue { get; set; }
+
+            [JsonProperty(PropertyName = "visionTotalValue")]
+            public string VisionTotalValue { get; set; }
+
+            [JsonProperty(PropertyName = "stretchTotalValue")]
+            public string StretchTotalValue { get; set; }
+
+            #endregion
+
+            [JsonProperty(PropertyName = "reminderTypeItems")]
+            public List<ReminderTypeItem> ReminderTypeItems { get; set; }
+
+            [JsonProperty(PropertyName = "reminderType")]
+            public ReminderType ReminderType { get; set; }
+
+            [JsonProperty(PropertyName = "cycleLengths")]
+            public List<CycleLength> CycleLengths { get; set; }
+
+            [JsonProperty(PropertyName = "cycleLengthSeconds")]
+            public int CycleLengthSeconds { get; set; }
+
             public static PluginSettings CreateDefaultSettings()
             {
                 List<CycleLength> lengths = new List<CycleLength>()
@@ -80,30 +146,28 @@ namespace com.jorkoh.health.reminders
                     }
                 };
 
-                PluginSettings instance = new PluginSettings
+                return new PluginSettings
                 {
+                    WaterTodayValue = "-",
+                    VisionTodayValue = "-",
+                    StretchTodayValue = "-",
+                    WaterMonthValue = "-",
+                    VisionMonthValue = "-",
+                    StretchMonthValue = "-",
+                    WaterTotalValue = "-",
+                    VisionTotalValue = "-",
+                    StretchTotalValue = "-",
+
                     ReminderTypeItems = types,
                     ReminderType = 0,
                     CycleLengths = lengths,
                     CycleLengthSeconds = lengths[0].CycleLengthSeconds
                 };
-                return instance;
             }
-
-            [JsonProperty(PropertyName = "reminderTypeItems")]
-            public List<ReminderTypeItem> ReminderTypeItems { get; set; }
-
-            [JsonProperty(PropertyName = "reminderType")]
-            public ReminderType ReminderType { get; set; }
-
-            [JsonProperty(PropertyName = "cycleLengths")]
-            public List<CycleLength> CycleLengths { get; set; }
-
-            [JsonProperty(PropertyName = "cycleLengthSeconds")]
-            public int CycleLengthSeconds { get; set; }
         }
 
         private PluginSettings settings;
+        private StatsSettings statsSettings;
         private TitleParameters titleParameters = null;
 
         // Alternatively preload them
@@ -164,7 +228,7 @@ namespace com.jorkoh.health.reminders
         private bool altWarning = false; // Blinking alert
 
         // Long press stuff
-        private const int LONG_PRESS_DELAY_MS = 650; // Android default is 500
+        private const int LONG_PRESS_DELAY_MS = 800; // Android default is 500
         private bool pressed = false;
         private CancellationTokenSource longPressCancellation;
 
@@ -177,26 +241,52 @@ namespace com.jorkoh.health.reminders
             Logger.Instance.LogMessage(TracingLevel.INFO, $"Constructor called");
             if (payload.Settings == null || payload.Settings.Count == 0)
             {
-                this.settings = PluginSettings.CreateDefaultSettings();
+                settings = PluginSettings.CreateDefaultSettings();
                 Connection.SetSettingsAsync(JObject.FromObject(settings));
             }
             else
             {
-                this.settings = payload.Settings.ToObject<PluginSettings>();
+                settings = payload.Settings.ToObject<PluginSettings>();
             }
             Connection.OnTitleParametersDidChange += Connection_OnTitleParametersDidChange;
+            Connection.OnSendToPlugin += Connection_OnSendToPlugin;
+            GlobalSettingsManager.Instance.RequestGlobalSettings();
         }
+
+        #region Events
+
+        private void Connection_OnTitleParametersDidChange(object sender, SDEventReceivedEventArgs<TitleParametersDidChange> e)
+        {
+            titleParameters = e.Event?.Payload?.TitleParameters;
+        }
+
+        private void Connection_OnSendToPlugin(object sender, SDEventReceivedEventArgs<SendToPlugin> e)
+        {
+            var payload = e.Event.Payload;
+
+            if (payload["property_inspector"] != null)
+            {
+                switch (payload["property_inspector"].ToString())
+                {
+                    case "resetStats":
+                        statsSettings.WaterUses.Clear();
+                        statsSettings.VisionUses.Clear();
+                        statsSettings.StretchUses.Clear();
+                        Connection.SetGlobalSettingsAsync(JObject.FromObject(statsSettings));
+                        break;
+                }
+            }
+        }
+
+        #endregion
 
         #region Overrides
 
         public override void Dispose()
         {
+            Connection.OnTitleParametersDidChange -= Connection_OnTitleParametersDidChange;
+            Connection.OnSendToPlugin -= Connection_OnSendToPlugin;
             Logger.Instance.LogMessage(TracingLevel.INFO, $"Destructor called");
-        }
-
-        private void Connection_OnTitleParametersDidChange(object sender, SDEventReceivedEventArgs<TitleParametersDidChange> e)
-        {
-            titleParameters = e.Event?.Payload?.TitleParameters;
         }
 
         public override void KeyPressed(KeyPayload payload)
@@ -240,7 +330,19 @@ namespace com.jorkoh.health.reminders
             Logger.Instance.LogMessage(TracingLevel.INFO, $"SETTING: {settings.CycleLengthSeconds}");
         }
 
-        public override void ReceivedGlobalSettings(ReceivedGlobalSettingsPayload payload) { }
+        public override void ReceivedGlobalSettings(ReceivedGlobalSettingsPayload payload)
+        {
+            if (payload?.Settings == null || payload.Settings.Count == 0)
+            {
+                statsSettings = StatsSettings.CreateDefaultSettings();
+                Connection.SetGlobalSettingsAsync(JObject.FromObject(statsSettings));
+            }
+            else
+            {
+                statsSettings = payload.Settings.ToObject<StatsSettings>();
+            }
+            UpdateStatsDisplay();
+        }
 
         #endregion
 
@@ -266,10 +368,54 @@ namespace com.jorkoh.health.reminders
         private void OnLongPress()
         {
             Logger.Instance.LogMessage(TracingLevel.INFO, "Long press");
-            // Reset the time
-            lastDrink = DateTime.Now;
+            lastDrink = DateTime.Now; // Reset the time
             altWarning = false;
             Connection.ShowOk();
+
+            // Increment the stats
+            switch (settings.ReminderType)
+            {
+                case ReminderType.Water:
+                    statsSettings.WaterUses.Add(DateTime.Now);
+                    break;
+                case ReminderType.Vision:
+                    statsSettings.VisionUses.Add(DateTime.Now);
+                    break;
+                case ReminderType.Stretch:
+                    statsSettings.StretchUses.Add(DateTime.Now);
+                    break;
+            }
+            Connection.SetGlobalSettingsAsync(JObject.FromObject(statsSettings));
+        }
+
+        private void UpdateStatsDisplay()
+        {
+            // Water
+            settings.WaterTodayValue = statsSettings.WaterUses.Where(u =>
+                u.Date == DateTime.Now.Date
+            ).Count().ToString();
+            settings.WaterMonthValue = statsSettings.WaterUses.Where(u =>
+                u.Date.Month == DateTime.Now.Date.Month && u.Date.Year == DateTime.Now.Date.Year
+            ).Count().ToString();
+            settings.WaterTotalValue = statsSettings.WaterUses.Count().ToString();
+            // Vision
+            settings.VisionTodayValue = statsSettings.VisionUses.Where(u =>
+                        u.Date == DateTime.Now.Date
+                    ).Count().ToString();
+            settings.VisionMonthValue = statsSettings.VisionUses.Where(u =>
+                u.Date.Month == DateTime.Now.Date.Month && u.Date.Year == DateTime.Now.Date.Year
+            ).Count().ToString();
+            settings.VisionTotalValue = statsSettings.VisionUses.Count().ToString();
+            // Stretch
+            settings.StretchTodayValue = statsSettings.StretchUses.Where(u =>
+                        u.Date == DateTime.Now.Date
+                    ).Count().ToString();
+            settings.StretchMonthValue = statsSettings.StretchUses.Where(u =>
+                u.Date.Month == DateTime.Now.Date.Month && u.Date.Year == DateTime.Now.Date.Year
+            ).Count().ToString();
+            settings.StretchTotalValue = statsSettings.StretchUses.Count().ToString();
+
+            Connection.SetSettingsAsync(JObject.FromObject(settings));
         }
 
         private void DrawMode(ActionMode mode)
@@ -574,7 +720,26 @@ namespace com.jorkoh.health.reminders
                     true,
                     TitleVerticalAlignment.Top
                 );
-                string splitTitle = Tools.SplitStringToFit($"Session:\n14\nTotal:\n1231", adaptedParams);
+
+                string today = "-";
+                string total = "-";
+                switch (settings.ReminderType)
+                {
+                    case ReminderType.Water:
+                        today = settings.WaterTodayValue;
+                        total = settings.WaterTotalValue;
+                        break;
+                    case ReminderType.Vision:
+                        today = settings.VisionTodayValue;
+                        total = settings.VisionTotalValue;
+                        break;
+                    case ReminderType.Stretch:
+                        today = settings.StretchTodayValue;
+                        total = settings.StretchTotalValue;
+                        break;
+                }
+
+                string splitTitle = Tools.SplitStringToFit($"Today:\n{today}\nTotal:\n{total}", adaptedParams);
                 graphics.AddTextPath(adaptedParams, image.Height, image.Width, splitTitle);
                 await Connection.SetImageAsync(image);
             }
