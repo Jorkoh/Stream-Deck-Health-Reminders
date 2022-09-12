@@ -42,9 +42,11 @@
   <img src="readme-resources/stats.png" width="50%">
 </p>
 
-## Download (WINDOWS ONLY)
+## Download
 
-[Packaged direct download](https://github.com/Jorkoh/Stream-Deck-Health-Reminders/raw/master/com.jorkoh.health.reminders.streamDeckPlugin)
+[macOS download](https://github.com/Jorkoh/Stream-Deck-Health-Reminders/raw/master/macOS-package/com.jorkoh.health.reminders.streamDeckPlugin)
+
+[Windows download](https://github.com/Jorkoh/Stream-Deck-Health-Reminders/raw/master/windows-package/com.jorkoh.health.reminders.streamDeckPlugin)
 
 ## Build
 
