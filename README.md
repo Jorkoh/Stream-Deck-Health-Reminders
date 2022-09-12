@@ -6,6 +6,8 @@
   Build and sustain healthy habits with the help of Stream Deck ❤️
 </p>
 
+[DEMO VIDEO](https://www.youtube.com/watch?v=ZrYUA8Jl08M)
+
 ## Instructions
 
 1. Choose the type of reminder you are interested on, for now you can choose between:
@@ -40,7 +42,7 @@
   <img src="readme-resources/stats.png" width="50%">
 </p>
 
-## Download
+## Download (WINDOWS ONLY)
 
 [Packaged direct download](https://github.com/Jorkoh/Stream-Deck-Health-Reminders/raw/master/com.jorkoh.health.reminders.streamDeckPlugin)
 
